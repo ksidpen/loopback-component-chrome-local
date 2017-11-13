@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "cheerio": "^1.0.0-rc.2",
+    "puppeteer": "^0.13.0",
+    "twemoji": "^2.5.0"
+  },
+  "description": "",
+  "license": "ISC",
+  "main": "index.js",
+  "name": "loopback-component-chrome-local",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.0.0"
+}
