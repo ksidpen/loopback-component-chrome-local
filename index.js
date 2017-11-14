@@ -40,7 +40,7 @@ module.exports = {
       var browser;
       var page;
       var buffer;
-      puppeteer.launch()
+      puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']})
       .then(function (result) {
         browser = result;
         return browser.newPage();
