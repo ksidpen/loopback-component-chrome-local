@@ -18,7 +18,7 @@ module.exports = {
       return promise.all(jobs);
     }
 
-    async function createRendering(id, html, extension, folder, pages) {
+    function createRendering(id, html, extension, folder, pages) {
       var Container = dataSource.models.Container;
       var app = Container.app;
       var storage = app.datasources.storage;
@@ -36,37 +36,47 @@ module.exports = {
       .append('<style>body{margin: 0;padding: 0;}}</style>')
       html = parsedHtml.html();
 
-      const args = settings.puppeteer;
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
-      await page.goto(`data:text/html,${html}`, { timeout: 'networkidle0' });
-
+      var args = settings.puppeteer;
+      var browser;
+      var page;
       var buffer;
-      if(extension === 'pdf'){
-        buffer = await page.pdf(args);
-      }else{
-        var mmToPx = 3.779220779220779;
-        var width = parseInt(args.width.replace('mm', '') * mmToPx);
-        var height = parseInt(args.height.replace('mm', '') * mmToPx);
-        buffer = await page.screenshot({
-          clip: {
-            x:0,
-            y:0,
-            width: width,
-            height: height
-          }
-        })
-      }
+      puppeteer.launch()
+      .then(function (result) {
+        browser = result;
+        return browser.newPage();
+      })
+      .then(function (result) {
+        page = result;
+        return page.goto('data:text/html,'+html, { timeout: 'networkidle0' })
+      })
+      .then(function () {
+        if(extension === 'pdf'){
+          return page.pdf(args);
+        }else{
+          var mmToPx = 3.779220779220779;
+          var width = parseInt(args.width.replace('mm', '') * mmToPx);
+          var height = parseInt(args.height.replace('mm', '') * mmToPx);
+          return page.screenshot({
+            clip: {
+              x:0,
+              y:0,
+              width: width,
+              height: height
+            }
+          })
+        }
+      })
+      .then(function (buffer) {
+        browser.close();
 
-      await browser.close();
+        let stream = new Duplex();
+        stream.push(buffer);
+        stream.push(null);
 
-      let stream = new Duplex();
-      stream.push(buffer);
-      stream.push(null);
-
-      return Container.uploadFromStream(stream,
-          storage.settings.container,
-          folder + id + '.' + extension);
+        return Container.uploadFromStream(stream,
+            storage.settings.container,
+            folder + id + '.' + extension);
+      })
     }
 
     function getRendering(id, req, res, cb, extension, folder) {
